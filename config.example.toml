@@ -1,0 +1,32 @@
+# Copie para config.toml na raiz do projeto, ou aponte a variável de ambiente
+# AUTOCAD_MCP_CONFIG para o arquivo. Sem arquivo, valem os defaults abaixo.
+
+[server]
+# run_lisp é um escape avançado e perigoso: fica DESLIGADO por padrão.
+enable_lisp = false
+# Se true, o servidor inicia o AutoCAD quando não encontrar instância aberta.
+allow_launch = false
+# ProgID COM. "AutoCAD.Application" cobre AutoCAD e Plant 3D. Pode fixar versão,
+# Consulte o ProgID registrado na sua instalação; não presuma a versão pelo ano.
+prog_id = "AutoCAD.Application"
+# "dynamic" (padrão): late-binding, sem cache gen_py, nomes de propriedade case-insensitive.
+# "gencache": tenta makepy (tipado, mais rápido, mas case-sensitive e exige cache gravável).
+com_binding = "dynamic"
+# Timeout (s) de cada operação. Diálogo modal aberto no AutoCAD trava a chamada até aqui.
+com_timeout_s = 120.0
+
+[limits]
+default_limit = 50    # tamanho de página padrão das listas
+max_limit = 500       # teto (protege o contexto do assistente)
+max_batch_rows = 2000 # máximo de linhas do Excel por chamada
+
+[excel]
+# Se não vazio, só lê/escreve planilhas dentro destas pastas.
+allowed_dirs = []
+# allowed_dirs = ["C:\\Projetos", "C:\\CAD-Exchange"]
+
+[log]
+level = "INFO"        # DEBUG | INFO | WARNING | ERROR
+# dir = "C:\\autocad-mcp\\logs"   # padrão: <projeto>/logs
+max_bytes = 2000000
+backups = 5
