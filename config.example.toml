@@ -2,6 +2,9 @@
 # AUTOCAD_MCP_CONFIG para o arquivo. Sem arquivo, valem os defaults abaixo.
 
 [server]
+# Bloqueia ferramentas que escrevem, inclusive exportação Excel e dry_run dessas ferramentas.
+# Alternativa: AUTOCAD_MCP_READ_ONLY=1 no ambiente do processo. Reinicie após alterar.
+read_only = false
 # run_lisp é um escape avançado e perigoso: fica DESLIGADO por padrão.
 enable_lisp = false
 # Se true, o servidor inicia o AutoCAD quando não encontrar instância aberta.
@@ -14,16 +17,26 @@ prog_id = "AutoCAD.Application"
 com_binding = "dynamic"
 # Timeout (s) de cada operação. Diálogo modal aberto no AutoCAD trava a chamada até aqui.
 com_timeout_s = 120.0
+# Perfil de ferramentas visível ao cliente: "lean" (13), "core" (37) ou "full" (50, padrão).
+profile = "full"
+# Trilha JSONL em <logs>/audit.jsonl: instante, ferramenta, resultado (sem parâmetros nem dados do desenho).
+audit_log = false
 
 [limits]
 default_limit = 50    # tamanho de página padrão das listas
 max_limit = 500       # teto (protege o contexto do assistente)
 max_batch_rows = 2000 # máximo de linhas do Excel por chamada
 
-[excel]
-# Se não vazio, só lê/escreve planilhas dentro destas pastas.
+[paths]
+# Pastas onde o servidor pode LER/GRAVAR arquivos (DXF, PDF, PNG, Excel). Vale para todas as ferramentas.
+# Se vazio, só a pasta de trabalho ~/autocad-mcp-workspace (ou $AUTOCAD_MCP_WORKSPACE) é aceita.
 allowed_dirs = []
 # allowed_dirs = ["C:\\Projetos", "C:\\CAD-Exchange"]
+# Libera o disco inteiro (só se você aceitar esse risco). Ignorado se allowed_dirs não estiver vazio.
+allow_any = false
+# [excel].allowed_dirs continua aceito como alias antigo de [paths].allowed_dirs.
+[excel]
+allowed_dirs = []
 
 [log]
 level = "INFO"        # DEBUG | INFO | WARNING | ERROR

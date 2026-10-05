@@ -11,9 +11,33 @@
 
 Servidor local del [Model Context Protocol](https://modelcontextprotocol.io/) para **AutoCAD y el entorno de dibujo de AutoCAD Plant 3D**, desarrollado con Python, FastMCP del SDK MCP y COM de Windows (`pywin32`). Orientado a flujos de tuberías y soportes: capas, atributos, coordenadas y hojas de cálculo.
 
-> **Versión inicial 0.1.0.** Las pruebas automatizadas utilizan un AutoCAD simulado y un proceso stdio real. La compatibilidad con versiones concretas de AutoCAD/Plant 3D y el comportamiento de deshacer requieren validación en un dibujo desechable. Proyecto independiente, sin afiliación con Autodesk.
+> **v0.3.1.** 188 pruebas automáticas (AutoCAD simulado, motor DXF sin conexión y proceso stdio real) y 7 pruebas reales opcionales que pasaron en **AutoCAD Plant 3D 2021**, en una máquina y un dibujo `MCP_TEST.dwg`. Otras versiones y objetos nativos de Plant 3D no están certificados; ver [validación](docs/validation.md). Proyecto independiente, sin afiliación con Autodesk.
 
 [Instalación](#instalación) · [Herramientas](#herramientas) · [Configuración](#configuración) · [Alcance-en-Plant-3D](#alcance-en-plant-3d) · [Contribuir](CONTRIBUTING.md)
+
+## Novedades 0.3 — Motor DXF sin AutoCAD, cotas, layouts y PDF
+
+- **DXF sin AutoCAD abierto** (`dxf_*`, ezdxf): crear/editar, consultar entidades, leer atributos de bloques, SQL de solo lectura (`dxf_sql_query`), auditar, **cotas nativas**, **layouts** con viewports a escala y exportar **PDF/PNG/SVG**. `dxf_insert_support_symbol` inserta pictogramas GUIA/ANCORA/APOIO/MOLA con TAG/TIPO/LINHA (simplificados).
+- **Con AutoCAD abierto:** `add_dimension`, `plot_to_pdf` (plotter real "DWG To PDF.pc3"), `project_data_set/get` (metadatos dentro del DWG).
+- **Más seguro por defecto:** todo archivo leído/escrito queda limitado a `~/autocad-mcp-workspace` (o `[paths].allowed_dirs`; `[paths].allow_any = true` lo libera); ediciones DXF con `output_path`; auditoría JSONL opcional; perfiles `lean`/`core`/`full`.
+- **Corregido tras la prueba real:** las consultas dejaban un paso de deshacer vacío.
+- Límites: `dxf_export` es una renderización ezdxf/matplotlib aproximada; solo DXF (DWG requiere AutoCAD).
+
+## Novedades 0.2 — Revisión de registros de soportes
+
+**Especialización en tuberías y soportes:** revisar un registro por TAG antes de la entrega y comparar revisiones sin depender de los handles del CAD.
+
+| Herramienta nueva | Función |
+|---|---|
+| `system_capabilities` | Informa capacidades y modo de solo lectura sin afirmar conexión con AutoCAD |
+| `snapshot_support_register` | Captura bloques, atributos, posiciones y unidades en un ámbito explícito |
+| `audit_support_register` | Detecta TAG duplicadas/ausentes, tipo/línea vacíos y discrepancias con el registro aprobado del proyecto |
+| `compare_support_register` | Muestra altas, bajas, desplazamientos y cambios; rechaza unidades incompatibles y deja sin resolver las TAG ambiguas |
+
+Activa `server.read_only=true` o `AUTOCAD_MCP_READ_ONLY=1` y reinicia para bloquear herramientas de escritura, incluidas Excel y AutoLISP. La auditoría y comparación funcionan sin AutoCAD con snapshots completos. No calculan soportes ni validan datos nativos de Plant 3D.
+
+[Flujo y limitaciones](docs/support-quality.md) · [Comparación con el proyecto de referencia](docs/comparison-u-c4n.md)
+
 
 ## Funcionalidades
 
@@ -84,7 +108,7 @@ Cierra por completo el cliente, incluida la bandeja del sistema, y vuelve a abri
 
 ## Herramientas
 
-El servidor registra **26 herramientas**. La [referencia](docs/tools.md) incluye firmas y valores predeterminados extraídos del código.
+El servidor registra **50 herramientas**. La [referencia](docs/tools.md) incluye firmas y valores predeterminados extraídos del código.
 
 | Grupo | Herramientas |
 |---|---|
@@ -112,7 +136,10 @@ Copia [config.example.toml](config.example.toml) a `config.toml`, o indica su ru
 | `limits.default_limit` | `50` | Tamaño de página predeterminado |
 | `limits.max_limit` | `500` | Máximo de resultados por página |
 | `limits.max_batch_rows` | `2000` | Máximo de filas Excel por llamada |
-| `excel.allowed_dirs` | `[]` | Sin restricción de directorios cuando está vacío |
+| `paths.allowed_dirs` | `[]` | Carpetas para TODA la E/S de archivos; vacío = solo `~/autocad-mcp-workspace` (`excel.allowed_dirs` sigue como alias) |
+| `paths.allow_any` | `false` | Permite cualquier ruta |
+| `server.profile` | `full` | `lean` (13), `core` (37) o `full` (50) |
+| `server.audit_log` | `false` | Auditoría JSONL sin parámetros |
 
 Configura directorios permitidos para los libros de trabajo. Los registros van a stderr y a `logs/server.log` con rotación; stdout se reserva al protocolo MCP. Los registros pueden incluir rutas, metadatos y expresiones LISP: revísalos antes de compartirlos.
 

@@ -7,7 +7,8 @@ This early-release server executes with the permissions of its Windows account. 
 ## Trust boundary
 
 - Local stdio is the supported transport. There is no authentication layer for a network deployment.
-- Tools can modify/save drawings and read/write workbooks. There is no global read-only mode.
+- Tools can modify/save drawings and read/write workbooks. Set `server.read_only=true` or `AUTOCAD_MCP_READ_ONLY=1` and restart to block mutating tools before COM execution. This includes Excel export, LISP, save, view/session changes and dry-run calls to mutating tools. Logs and temporary selection sets still exist; this is not an OS sandbox.
+- Invalid configuration files/values fall back to read-only mode. The environment override is recommended when the client must never enable writes.
 - `confirm=true` is supplied by the MCP client, not an independent human-approval boundary.
 - `excel.allowed_dirs = []` does not restrict filesystem locations. Set an explicit workbook allowlist.
 - AutoLISP is disabled by default. Its denylist is bypassable and is not a sandbox; only enable it for trusted instructions.

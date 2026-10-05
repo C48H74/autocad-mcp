@@ -11,17 +11,44 @@ Servidor **MCP local** (Python, `FastMCP`, transporte **stdio**) que deixa o Cla
 desenhos abertos no **AutoCAD / AutoCAD Plant 3D** via COM (`pywin32`). Foco: tubulação e suportes — blocos com
 atributos, camadas, coordenadas e planilhas Excel.
 
-> **Status de verificação (leia):** a lógica das 26 ferramentas foi testada contra um *AutoCAD falso*
-> (`tests/fake_autocad.py`) e o servidor foi testado de verdade via stdio. A camada COM real
-> (`pywin32` ⇄ AutoCAD) **não pôde ser executada onde o código foi escrito** (sem Windows/AutoCAD). Por isso existe
-> `tests/test_integration.py` (`pytest -m autocad`): rode-o uma vez na sua máquina, num desenho de teste, antes de
-> confiar no servidor em desenhos de projeto. Detalhes em [Verificação](#verificação-e-testes).
+> **Status de verificação (v0.3.1):** 188 testes automatizados (AutoCAD simulado, motor DXF offline e servidor stdio real)
+> e 7 testes reais opcionais (`pytest -m autocad`) que **passaram no AutoCAD Plant 3D 2021**, numa máquina, num desenho
+> `MCP_TEST.dwg`. Outras versões, objetos nativos do Plant 3D e desenhos de projeto **não estão certificados**: rode
+> `pytest -m autocad` na sua instalação antes de confiar. Registro completo em [docs/validation.md](docs/validation.md).
+
+## Novidades 0.3 — Motor DXF sem AutoCAD, cotas, layouts e PDF
+
+- **DXF sem AutoCAD aberto** (`dxf_*`, ezdxf): criar/editar, consultar entidades, ler atributos de blocos, SQL somente leitura
+  (`dxf_sql_query`), auditar, **cotas nativas**, **layouts** com viewports em escala e exportar **PDF/PNG/SVG**.
+  `dxf_insert_support_symbol` insere pictogramas GUIA/ANCORA/APOIO/MOLA com TAG/TIPO/LINHA (simplificados, não seguem norma).
+- **No AutoCAD aberto:** `add_dimension` (cota nativa), `plot_to_pdf` (plotter real "DWG To PDF.pc3"), `project_data_set/get` (metadados dentro do DWG).
+- **Mais seguro por padrão:** todo arquivo lido/gravado fica restrito a `~/autocad-mcp-workspace` (ou `[paths].allowed_dirs`;
+  `[paths].allow_any = true` libera tudo); edições DXF aceitam `output_path` (preserva o original); trilha JSONL opcional;
+  perfis `lean`/`core`/`full`.
+- **Corrigido após teste real:** consultas deixavam um passo de desfazer vazio (o 1º Ctrl+Z não fazia nada visível).
+- Limites: `dxf_export` é renderização ezdxf/matplotlib (aproximada), não o plotter do AutoCAD; DXF apenas (DWG exige AutoCAD).
 
 ---
 
+## Novidades 0.2 — Conferência de cadastros de suportes
+
+**Diferencial para tubulação e suportes:** conferir um cadastro por TAG antes da entrega e comparar revisões sem depender dos handles do CAD.
+
+| Nova ferramenta | Função |
+|---|---|
+| `system_capabilities` | Informa capacidades e modo somente leitura sem afirmar conexão com AutoCAD |
+| `snapshot_support_register` | Captura blocos, atributos, posições e unidades em um escopo explícito |
+| `audit_support_register` | Identifica TAGs duplicadas/ausentes, tipo/linha vazios e divergências do cadastro esperado do projeto |
+| `compare_support_register` | Mostra inclusões, exclusões, deslocamentos e alterações; recusa unidades incompatíveis e deixa TAGs ambíguas pendentes |
+
+Ative `server.read_only=true` ou `AUTOCAD_MCP_READ_ONLY=1` e reinicie para bloquear ferramentas de escrita, inclusive Excel e AutoLISP. Auditoria e comparação funcionam sem AutoCAD a partir de snapshots completos. Não dimensionam suportes nem validam dados nativos do Plant 3D.
+
+[Fluxo e limitações](docs/support-quality.md) · [Comparação com o projeto de referência](docs/comparison-u-c4n.md)
+
+
 ## Escopo e segurança
 
-Versão inicial **0.1.0**. `confirm=true` é um parâmetro de ferramenta, não uma autorização humana independente. Não há modo global somente leitura. `excel.allowed_dirs = []` permite planilhas em qualquer pasta acessível; configure pastas permitidas. Timeout não cancela uma chamada COM bloqueada. O projeto requer SDK MCP 1.x (`mcp<2`).
+Versão **0.3.1**. `confirm=true` é um parâmetro de ferramenta, não uma autorização humana independente. Há modo somente leitura configurável, descrito acima. Sem configuração, só a pasta `~/autocad-mcp-workspace` é aceita para arquivos (`[paths].allowed_dirs`; `[excel].allowed_dirs` é alias antigo). Timeout não cancela uma chamada COM bloqueada. O projeto requer SDK MCP 1.x (`mcp<2`).
 
 [Referência das ferramentas](docs/tools.md) · [Validação](docs/validation.md) · [Contribuição](CONTRIBUTING.md) · [Segurança](SECURITY.md)
 
@@ -90,7 +117,7 @@ Alternativa com `uv` (caminho do `uv.exe` obtido com `where uv`):
 ```
 
 Depois **feche o Claude Desktop por completo** (inclusive na bandeja) e abra de novo. O servidor `autocad` deve aparecer
-com 26 ferramentas. `AUTOCAD_MCP_CONFIG` é opcional; o servidor também procura `config.toml` na raiz do projeto.
+com 50 ferramentas. `AUTOCAD_MCP_CONFIG` é opcional; o servidor também procura `config.toml` na raiz do projeto.
 
 ### Testar com o MCP Inspector
 
@@ -100,7 +127,7 @@ npx @modelcontextprotocol/inspector C:\Users\SEU_USUARIO\autocad-mcp\.venv\Scrip
 npx @modelcontextprotocol/inspector uv --directory C:\Users\SEU_USUARIO\autocad-mcp run autocad-mcp
 ```
 
-Abra a URL exibida, clique em **Connect**, aba **Tools → List Tools** (26 ferramentas) e rode `status` (com o AutoCAD
+Abra a URL exibida, clique em **Connect**, aba **Tools → List Tools** (50 ferramentas) e rode `status` (com o AutoCAD
 aberto deve trazer versão/unidade; com ele fechado, `ok:false` e `error.code:"autocad_not_running"`).
 
 ---
@@ -121,7 +148,7 @@ aberto deve trazer versão/unidade; com ele fechado, `ok:false` e `error.code:"a
 | **Respostas** | Sempre `{ok, data, warnings, error}`; `error = {code, message, details}`. Listas paginadas (`limit`, `offset`, `page.{total,has_more,next_offset}`); `limit` é limitado por `[limits].max_limit`. |
 | **Consulta** | `SelectionSet` com filtros DXF (tipo, camada, bloco) — rápido. Curingas `*` e `?`; demais caracteres especiais são escapados (`A.B` não casa `AxB`). Se o `Select` com filtro falhar nesta instalação, cai em filtragem Python com aviso. Blocos dinâmicos são achados pelo nome *efetivo*. |
 
-## 4. Ferramentas (26)
+## 4. Ferramentas (50)
 
 | Grupo | Ferramentas |
 |---|---|
@@ -131,6 +158,10 @@ aberto deve trazer versão/unidade; com ele fechado, `ok:false` e `error.code:"a
 | Desenho | `draw_line`, `draw_polyline`, `draw_circle`, `add_text`, `add_mtext`, `move_entity`, `copy_entity`, `delete_entities(confirm, dry_run)` |
 | Blocos | `list_block_definitions`, `insert_block`, `read_block_attributes`, `update_block_attributes(handle \| filter, dry_run, confirm)` |
 | Excel | `export_blocks_to_excel`, `import_blocks_from_excel(path, sheet, mapping, dry_run…)`, `sync_attributes_from_excel(path, key_tag, dry_run…)` |
+| Cotas/plotagem/dados (AutoCAD aberto) | `add_dimension`, `plot_to_pdf`, `project_data_set`, `project_data_get` |
+| DXF leitura (offline) | `dxf_info`, `dxf_query`, `dxf_get_entity`, `dxf_read_attributes`, `dxf_sql_query`, `dxf_audit` |
+| DXF escrita (offline) | `dxf_create`, `dxf_create_layer`, `dxf_add_entities`, `dxf_define_block`, `dxf_modify_entities`, `dxf_delete_entities(confirm, dry_run)`, `dxf_add_dimensions`, `dxf_create_layout`, `dxf_export`, `dxf_insert_support_symbol` |
+| Qualidade de suportes | `system_capabilities`, `snapshot_support_register`, `audit_support_register`, `compare_support_register` |
 | Avançado | `run_lisp(expression, confirm)` — **desligado** por padrão (`enable_lisp`) |
 
 **Formato da planilha** (gerada por `export_blocks_to_excel`, aceita pelas duas ferramentas de importação):
@@ -187,7 +218,7 @@ Use **um desenho novo chamado `MCP_TEST.dwg`** (os testes de integração se rec
 | Timeout de N s "provável diálogo modal" | Diálogos (fonte/xref ausente, "salvar alterações", licença) **bloqueiam toda chamada COM** sem retornar erro. Feche o diálogo no AutoCAD. As chamadas seguintes ficam na fila até o AutoCAD voltar. Ajuste `com_timeout_s`. |
 | `operation_blocked`: comando ativo / somente leitura | Escritas são recusadas com comando ativo (evita corromper o undo) ou desenho *read-only*. `Esc` e tente de novo. |
 | `Falha na chamada COM … (HRESULT 0x80020009)` | Exceção genérica do AutoCAD; a mensagem entre parênteses vem do próprio AutoCAD (ex.: "Layer not found"). 0x80020005 = tipo incompatível (valor de coordenada/atributo inesperado); 0x80020003/`AttributeError` = propriedade inexistente (com `gencache`, volte para `com_binding = "dynamic"`). |
-| Erro ao gravar `.xlsx` (PermissionError) | O arquivo está aberto no Excel (feche-o) ou a pasta não permite escrita. Verifique também `[excel].allowed_dirs`. |
+| Erro ao gravar `.xlsx` (PermissionError) | O arquivo está aberto no Excel (feche-o) ou a pasta não permite escrita. Verifique também `[paths].allowed_dirs`. |
 | Import lê linhas vazias / valores `None` | O `.xlsx` tem fórmulas sem valor em cache (gerado por script, nunca aberto no Excel). Abra no Excel e salve; a leitura usa os valores calculados. `.xls` e `.csv` não são suportados. |
 | `Filtro DXF indisponível…` (aviso) | O `Select` com filtros falhou nesta instalação; funciona por filtragem em Python (mais lenta em desenhos enormes). Use `bbox`/`limit`. |
 | Claude Desktop não lista o servidor | JSON inválido, caminho relativo, ou app não foi fechado por completo. Veja `%APPDATA%\Claude\logs\mcp-server-autocad.log` e `logs\server.log` do projeto. |

@@ -1,0 +1,18 @@
+autocad-mcp
+Copyright (c) 2026 Daniel de Souza Paixão. MIT License (see LICENSE).
+
+This project was inspired, at the level of ideas only, by the public repositories listed below.
+No source code from any of them was copied; every feature was implemented independently on
+top of ezdxf, matplotlib and the Python standard library.
+
+- U-C4N/Autocad-MCP (MIT) - dual COM/DXF backend, dimensions and layouts, tool profiles.
+- puran-water/autocad-mcp (MIT) - ezdxf backend, symbol library.
+- EmptyKot/acad-cmd (MIT) - command completion, project data dictionaries, audit log.
+- daobataotie/cad-mcp (MIT) - screenshot loop, structured tool annotations.
+- AnCode666/multiCAD-mcp (Apache-2.0) - unified batch operations, tool grouping.
+- zh19980811/easy-mcp-autocad (no license stated) - SQL index of drawing entities (concept only).
+- nguyenngocdue/DeepBIM-MCP-Autocad-Plugin (no license stated) - .NET plugin approach (not adopted).
+
+Runtime dependencies keep their own licenses: ezdxf (MIT), matplotlib (PSF-style BSD), openpyxl (MIT),
+pydantic (MIT), mcp (MIT), pywin32 (PSF).
+AutoCAD is a trademark of Autodesk, Inc.; this project is independent and not affiliated with Autodesk.
