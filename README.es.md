@@ -49,10 +49,18 @@ Activa `server.read_only=true` o `AUTOCAD_MCP_READ_ONLY=1` y reinicia para bloqu
 
 ```mermaid
 flowchart LR
-    A[Asistente / cliente MCP] <-->|stdio| B[AutoCAD MCP Server]
-    B <--> C[Hilo COM dedicado]
-    C <--> D[Dibujo AutoCAD / Plant 3D]
-    B <--> E[Excel .xlsx]
+    A["AI assistant / MCP client"] <-->|stdio| B["MCP server<br/>50 tools, profiles lean/core/full"]
+    B --> G["Guards: allowed folders, read-only,<br/>confirm/dry_run, audit log"]
+    G --> L["Live engine: single COM worker"]
+    G --> H["Headless engine: ezdxf"]
+    G --> Q["Support QA: snapshot, audit, compare"]
+    L <--> D["AutoCAD / Plant 3D<br/>open drawing"]
+    L --> P1["PDF from the real plotter"]
+    L <--> X["Excel .xlsx keyed by TAG"]
+    H <--> F["DXF files"]
+    H --> P2["PDF / PNG / SVG<br/>matplotlib render"]
+    Q -.-> L
+    Q -.-> H
 ```
 
 ## Requisitos

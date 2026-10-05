@@ -2,6 +2,7 @@
 
 ## [0.3.1] - 2026-10-05
 
+- Docs: README architecture flowchart now shows both engines (COM and ezdxf), guards, support QA and the PDF/PNG/SVG/Excel paths.
 - Corrigido: `ensure_layer` ignorava cor e tipo de linha da layer (`doc.layers.add(..., dxfattribs=)` não aplica); teste de regressão.
 - Novo: cotas aceitam `lfac` (fator linear) para desenhos em escala; `export_render` aceita `size_in` (render grande) e corrige o redimensionamento da figura pelo backend.
 - Novo: `examples/showcase/` (P&ID, tanque com bocais/base, arranjo geral) + testes de fumaça; galeria no README.

@@ -46,6 +46,24 @@ Ative `server.read_only=true` ou `AUTOCAD_MCP_READ_ONLY=1` e reinicie para bloqu
 [Fluxo e limitações](docs/support-quality.md) · [Comparação com o projeto de referência](docs/comparison-u-c4n.md)
 
 
+## Arquitetura
+
+```mermaid
+flowchart LR
+    A["AI assistant / MCP client"] <-->|stdio| B["MCP server<br/>50 tools, profiles lean/core/full"]
+    B --> G["Guards: allowed folders, read-only,<br/>confirm/dry_run, audit log"]
+    G --> L["Live engine: single COM worker"]
+    G --> H["Headless engine: ezdxf"]
+    G --> Q["Support QA: snapshot, audit, compare"]
+    L <--> D["AutoCAD / Plant 3D<br/>open drawing"]
+    L --> P1["PDF from the real plotter"]
+    L <--> X["Excel .xlsx keyed by TAG"]
+    H <--> F["DXF files"]
+    H --> P2["PDF / PNG / SVG<br/>matplotlib render"]
+    Q -.-> L
+    Q -.-> H
+```
+
 ## Escopo e segurança
 
 Versão **0.3.1**. `confirm=true` é um parâmetro de ferramenta, não uma autorização humana independente. Há modo somente leitura configurável, descrito acima. Sem configuração, só a pasta `~/autocad-mcp-workspace` é aceita para arquivos (`[paths].allowed_dirs`; `[excel].allowed_dirs` é alias antigo). Timeout não cancela uma chamada COM bloqueada. O projeto requer SDK MCP 1.x (`mcp<2`).

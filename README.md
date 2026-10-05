@@ -67,11 +67,18 @@ Built by a piping and pipe-supports engineer, so the focus is on what that work 
 
 ```mermaid
 flowchart LR
-    A[AI assistant / MCP client] <-->|stdio| B[AutoCAD MCP Server]
-    B <--> C[Single COM worker]
-    C <--> D[AutoCAD / Plant 3D drawing]
-    B <--> E[Excel .xlsx]
-    B <--> F[DXF files, no AutoCAD needed]
+    A["AI assistant / MCP client"] <-->|stdio| B["MCP server<br/>50 tools, profiles lean/core/full"]
+    B --> G["Guards: allowed folders, read-only,<br/>confirm/dry_run, audit log"]
+    G --> L["Live engine: single COM worker"]
+    G --> H["Headless engine: ezdxf"]
+    G --> Q["Support QA: snapshot, audit, compare"]
+    L <--> D["AutoCAD / Plant 3D<br/>open drawing"]
+    L --> P1["PDF from the real plotter"]
+    L <--> X["Excel .xlsx keyed by TAG"]
+    H <--> F["DXF files"]
+    H --> P2["PDF / PNG / SVG<br/>matplotlib render"]
+    Q -.-> L
+    Q -.-> H
 ```
 
 ## Install
