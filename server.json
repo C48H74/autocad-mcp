@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.C48H74/autocad-mcp",
+  "title": "AutoCAD MCP for Piping & Pipe Supports",
+  "description": "Live AutoCAD/Plant 3D control via COM plus a headless DXF engine (ezdxf): 50 tools for blocks, dimensions, layouts, PDF and Excel.",
+  "repository": { "url": "https://github.com/C48H74/autocad-mcp", "source": "github" },
+  "version": "0.3.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "autocad-mcp",
+      "version": "0.3.1",
+      "transport": { "type": "stdio" }
+    }
+  ]
+}
