@@ -1,3 +1,4 @@
+<!-- mcp-name: io.github.C48H74/autocad-mcp -->
 <div align="center">
 
 # AutoCAD MCP for Piping & Pipe Supports
